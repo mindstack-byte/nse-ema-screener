@@ -129,7 +129,7 @@ def run_screener(stocks):
                     found_signals.append(f"5 crossed above both and price is above all EMAs on {cross_date}")
                 elif ema10_cross and price_above_ema10 and price_above_ema20:
                     cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"10 crossed above and price is above both EMAs on {cross_date}")
+                    found_signals.append(f"10 crossed above and price is above all EMAs on {cross_date}")
 
             if found_signals:
                 any_signal_found = True
