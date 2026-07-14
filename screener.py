@@ -44,20 +44,6 @@ FO_SYMBOLS = {
     "TECHM", "TITAN", "TRENT", "ULTRACEMCO", "WIPRO",
 }
 
-FALLBACK_NIFTY_50 = [
-    "ADANIENT.NS", "ADANIPORTS.NS", "APOLLOHOSP.NS", "ASIANPAINT.NS", "AXISBANK.NS",
-    "BAJAJ-AUTO.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS", "BEL.NS", "BHARTIARTL.NS",
-    "CIPLA.NS", "COALINDIA.NS", "DRREDDY.NS", "EICHERMOT.NS", "ETERNAL.NS",
-    "GRASIM.NS", "HCLTECH.NS", "HDFCBANK.NS", "HDFCLIFE.NS", "HEROMOTOCO.NS",
-    "HINDALCO.NS", "HINDUNILVR.NS", "ICICIBANK.NS", "INDUSINDBK.NS", "INFY.NS",
-    "ITC.NS", "JIOFIN.NS", "JSWSTEEL.NS", "KOTAKBANK.NS", "LT.NS",
-    "M&M.NS", "MARUTI.NS", "NESTLEIND.NS", "NTPC.NS", "ONGC.NS",
-    "POWERGRID.NS", "RELIANCE.NS", "SBILIFE.NS", "SHRIRAMFIN.NS", "SBIN.NS",
-    "SUNPHARMA.NS", "TCS.NS", "TATACONSUM.NS", "TATAMOTORS.NS", "TATASTEEL.NS",
-    "TECHM.NS", "TITAN.NS", "TRENT.NS", "ULTRACEMCO.NS", "WIPRO.NS",
-]
-
-
 def get_nifty50_symbols():
     sources = [
         ("Nifty 50", "https://archives.nseindia.com/content/indices/ind_nifty50list.csv"),
@@ -85,8 +71,8 @@ def get_nifty50_symbols():
         except Exception as e:
             print(f"Could not fetch {label} from NSE ({e}). Trying next source.")
 
-    print("All NSE sources failed. Using fallback list instead.")
-    return FALLBACK_NIFTY_50
+    print("All NSE sources failed. No symbols available.")
+    return []
 
 
 def send_telegram_message(message):
@@ -140,10 +126,10 @@ def run_screener(stocks):
 
                 if ema5_cross and price_above_ema5 and price_above_ema10 and price_above_ema20:
                     cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"5 EMA crossed above 10 & 20 EMA and price is above all EMAs on {cross_date}")
+                    found_signals.append(f"5 crossed above both and price is above all EMAs on {cross_date}")
                 elif ema10_cross and price_above_ema10 and price_above_ema20:
                     cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"10 EMA crossed above 20 EMA and price is above both EMAs on {cross_date}")
+                    found_signals.append(f"10 crossed above and price is above both EMAs on {cross_date}")
 
             if found_signals:
                 any_signal_found = True
