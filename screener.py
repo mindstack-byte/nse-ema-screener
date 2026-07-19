@@ -1,3 +1,4 @@
+
 import os
 import time
 from io import StringIO
@@ -115,21 +116,19 @@ def run_screener(stocks):
 
                 ema5_c, ema10_c, ema20_c = float(curr["EMA5"]), float(curr["EMA10"]), float(curr["EMA20"])
                 ema5_p, ema10_p, ema20_p = float(prev["EMA5"]), float(prev["EMA10"]), float(prev["EMA20"])
-                close_c = float(curr["Close"])
 
-                ema5_cross = (ema5_p <= ema10_p and ema5_c > ema10_c) and (ema5_p <= ema20_p and ema5_c > ema20_c)
-                ema10_cross = (ema10_p <= ema20_p and ema10_c > ema20_c)
+                # Pure EMA crossovers only, each checked against the 20 EMA -
+                # no price/candle condition involved.
+                ema5_cross_ema20 = (ema5_p <= ema20_p) and (ema5_c > ema20_c)
+                ema10_cross_ema20 = (ema10_p <= ema20_p) and (ema10_c > ema20_c)
 
-                price_above_ema5 = close_c > ema5_c
-                price_above_ema10 = close_c > ema10_c
-                price_above_ema20 = close_c > ema20_c
-
-                if ema5_cross and price_above_ema5 and price_above_ema10 and price_above_ema20:
+                if ema5_cross_ema20:
                     cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"5 crossed above both and price is above all EMAs on {cross_date}")
-                elif ema10_cross and price_above_ema10 and price_above_ema20:
+                    found_signals.append(f"5 EMA crossed above 20 EMA on {cross_date}")
+
+                if ema10_cross_ema20:
                     cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"10 crossed above and price is above all EMAs on {cross_date}")
+                    found_signals.append(f"10 EMA crossed above 20 EMA on {cross_date}")
 
             if found_signals:
                 any_signal_found = True
