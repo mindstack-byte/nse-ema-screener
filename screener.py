@@ -1,7 +1,5 @@
-
 import os
 import time
-from io import StringIO
 from pathlib import Path
 
 import pandas as pd
@@ -32,48 +30,18 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("CHAT_ID
 
 LOOKBACK_DAYS = 3
 
-FO_SYMBOLS = {
-    "ADANIENT", "ADANIPORTS", "APOLLOHOSP", "ASIANPAINT", "AXISBANK",
-    "BAJAJ-AUTO", "BAJFINANCE", "BAJAJFINSV", "BEL", "BHARTIARTL",
-    "CIPLA", "COALINDIA", "DRREDDY", "EICHERMOT", "ETERNAL",
-    "GRASIM", "HCLTECH", "HDFCBANK", "HDFCLIFE", "HEROMOTOCO",
-    "HINDALCO", "HINDUNILVR", "ICICIBANK", "INDUSINDBK", "INFY",
-    "ITC", "JIOFIN", "JSWSTEEL", "KOTAKBANK", "LT",
-    "M&M", "MARUTI", "NESTLEIND", "NTPC", "ONGC",
-    "POWERGRID", "RELIANCE", "SBILIFE", "SHRIRAMFIN", "SBIN",
-    "SUNPHARMA", "TCS", "TATACONSUM", "TATAMOTORS", "TATASTEEL",
-    "TECHM", "TITAN", "TRENT", "ULTRACEMCO", "WIPRO",
-}
-
-def get_nifty50_symbols():
-    sources = [
-        ("Nifty 50", "https://archives.nseindia.com/content/indices/ind_nifty50list.csv"),
-        ("Nifty 100", "https://archives.nseindia.com/content/indices/ind_nifty100list.csv"),
-        ("Nifty 500", "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"),
-    ]
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-
-    for label, url in sources:
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            df = pd.read_csv(StringIO(response.text))
-
-            if "Symbol" not in df.columns:
-                print(f"Could not read symbols from {label}; trying next source.")
-                continue
-
-            symbols = [f"{symbol}.NS" for symbol in df["Symbol"]]
-            filtered = [s for s in symbols if s.split(".NS")[0] in FO_SYMBOLS]
-            if not filtered:
-                filtered = symbols
-            print(f"Fetched {len(filtered)} F&O symbols from {label} via NSE.")
-            return filtered
-        except Exception as e:
-            print(f"Could not fetch {label} from NSE ({e}). Trying next source.")
-
-    print("All NSE sources failed. No symbols available.")
-    return []
+STOCKS = [
+    "ADANIENT.NS", "ADANIPORTS.NS", "APOLLOHOSP.NS", "ASIANPAINT.NS", "AXISBANK.NS",
+    "BAJAJ-AUTO.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS", "BEL.NS", "BHARTIARTL.NS",
+    "CIPLA.NS", "COALINDIA.NS", "DRREDDY.NS", "EICHERMOT.NS", "ETERNAL.NS",
+    "GRASIM.NS", "HCLTECH.NS", "HDFCBANK.NS", "HDFCLIFE.NS", "HEROMOTOCO.NS",
+    "HINDALCO.NS", "HINDUNILVR.NS", "ICICIBANK.NS", "INDUSINDBK.NS", "INFY.NS",
+    "ITC.NS", "JIOFIN.NS", "JSWSTEEL.NS", "KOTAKBANK.NS", "LT.NS",
+    "M&M.NS", "MARUTI.NS", "NESTLEIND.NS", "NTPC.NS", "ONGC.NS",
+    "POWERGRID.NS", "RELIANCE.NS", "SBILIFE.NS", "SHRIRAMFIN.NS", "SBIN.NS",
+    "SUNPHARMA.NS", "TCS.NS", "TATACONSUM.NS", "TATAMOTORS.NS", "TATASTEEL.NS",
+    "TECHM.NS", "TITAN.NS", "TRENT.NS", "ULTRACEMCO.NS", "WIPRO.NS",
+]
 
 
 def send_telegram_message(message):
@@ -150,5 +118,4 @@ def run_screener(stocks):
 if __name__ == "__main__":
     if not TELEGRAM_TOKEN or TELEGRAM_TOKEN.startswith("PUT_") or not TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID.startswith("PUT_"):
         print("WARNING: Telegram credentials not set. Add them as environment variables or in a local .env file.")
-    stocks = get_nifty50_symbols()
-    run_screener(stocks)
+    run_screener(STOCKS)
