@@ -28,19 +28,72 @@ load_dotenv()
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN") or "PUT_YOUR_BOT_TOKEN_HERE"
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("CHAT_ID") or "PUT_YOUR_CHAT_ID_HERE"
 
-LOOKBACK_DAYS = 3
-
 STOCKS = [
-    "ADANIENT.NS", "ADANIPORTS.NS", "APOLLOHOSP.NS", "ASIANPAINT.NS", "AXISBANK.NS",
-    "BAJAJ-AUTO.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS", "BEL.NS", "BHARTIARTL.NS",
-    "CIPLA.NS", "COALINDIA.NS", "DRREDDY.NS", "EICHERMOT.NS", "ETERNAL.NS",
-    "GRASIM.NS", "HCLTECH.NS", "HDFCBANK.NS", "HDFCLIFE.NS", "HEROMOTOCO.NS",
-    "HINDALCO.NS", "HINDUNILVR.NS", "ICICIBANK.NS", "INDUSINDBK.NS", "INFY.NS",
-    "ITC.NS", "JIOFIN.NS", "JSWSTEEL.NS", "KOTAKBANK.NS", "LT.NS",
-    "M&M.NS", "MARUTI.NS", "NESTLEIND.NS", "NTPC.NS", "ONGC.NS",
-    "POWERGRID.NS", "RELIANCE.NS", "SBILIFE.NS", "SHRIRAMFIN.NS", "SBIN.NS",
-    "SUNPHARMA.NS", "TCS.NS", "TATACONSUM.NS", "TATAMOTORS.NS", "TATASTEEL.NS",
-    "TECHM.NS", "TITAN.NS", "TRENT.NS", "ULTRACEMCO.NS", "WIPRO.NS",
+    "ADANIENT.NS",
+    "ADANIPORTS.NS",
+    "APOLLOHOSP.NS",
+    "ASIANPAINT.NS",
+    "AXISBANK.NS",
+    "BAJAJ-AUTO.NS",
+    "BAJFINANCE.NS",
+    "BAJAJFINSV.NS",
+    "BEL.NS",
+    "BHARTIARTL.NS",
+    "BPCL.NS",
+    "CANBK.NS",
+    "CIPLA.NS",
+    "COALINDIA.NS",
+    "DLF.NS",
+    "DRREDDY.NS",
+    "EICHERMOT.NS",
+    "GAIL.NS",
+    "GRASIM.NS",
+    "HAL.NS",
+    "HCLTECH.NS",
+    "HDFCBANK.NS",
+    "HDFCLIFE.NS",
+    "HEROMOTOCO.NS",
+    "HINDALCO.NS",
+    "HINDUNILVR.NS",
+    "ICICIBANK.NS",
+    "IDFCFIRSTB.NS",
+    "INDIGO.NS",
+    "INDUSINDBK.NS",
+    "INFY.NS",
+    "IOC.NS",
+    "IRFC.NS",
+    "ITC.NS",
+    "JINDALSTEL.NS",
+    "JIOFIN.NS",
+    "JSWSTEEL.NS",
+    "KOTAKBANK.NS",
+    "LT.NS",
+    "LTIM.NS",
+    "M&M.NS",
+    "MARUTI.NS",
+    "NMDC.NS",
+    "NTPC.NS",
+    "ONGC.NS",
+    "PFC.NS",
+    "PNB.NS",
+    "POWERGRID.NS",
+    "RECLTD.NS",
+    "RELIANCE.NS",
+    "SBILIFE.NS",
+    "SBIN.NS",
+    "SHRIRAMFIN.NS",
+    "SUNPHARMA.NS",
+    "TATACONSUM.NS",
+    "TATAMOTORS.NS",
+    "TATAPOWER.NS",
+    "TATASTEEL.NS",
+    "TCS.NS",
+    "TECHM.NS",
+    "TITAN.NS",
+    "TRENT.NS",
+    "ULTRACEMCO.NS",
+    "VEDL.NS",
+    "WIPRO.NS",
 ]
 
 
@@ -65,8 +118,8 @@ def run_screener(stocks):
         try:
             data = yf.download(symbol, period="3mo", interval="1d", progress=False, auto_adjust=True)
 
-            if data.empty:
-                print(f"{symbol}: no data returned, skipping")
+            if data.empty or len(data) < 2:
+                print(f"{symbol}: not enough data, skipping")
                 continue
 
             if isinstance(data.columns, pd.MultiIndex):
@@ -78,25 +131,27 @@ def run_screener(stocks):
 
             found_signals = []
 
-            for i in range(len(data) - LOOKBACK_DAYS, len(data)):
-                curr = data.iloc[i]
-                prev = data.iloc[i - 1]
+            # Only compare today vs the previous trading day - nothing further back.
+            # Note: yfinance only returns trading days, so if today is Monday,
+            # the "previous" row is automatically Friday (weekends are skipped).
+            curr = data.iloc[-1]
+            prev = data.iloc[-2]
 
-                ema5_c, ema10_c, ema20_c = float(curr["EMA5"]), float(curr["EMA10"]), float(curr["EMA20"])
-                ema5_p, ema10_p, ema20_p = float(prev["EMA5"]), float(prev["EMA10"]), float(prev["EMA20"])
+            ema5_c, ema10_c, ema20_c = float(curr["EMA5"]), float(curr["EMA10"]), float(curr["EMA20"])
+            ema5_p, ema10_p, ema20_p = float(prev["EMA5"]), float(prev["EMA10"]), float(prev["EMA20"])
 
-                # Pure EMA crossovers only, each checked against the 20 EMA -
-                # no price/candle condition involved.
-                ema5_cross_ema20 = (ema5_p <= ema20_p) and (ema5_c > ema20_c)
-                ema10_cross_ema20 = (ema10_p <= ema20_p) and (ema10_c > ema20_c)
+            # Pure EMA crossovers only, each checked against the 20 EMA -
+            # no price/candle condition involved.
+            ema5_cross_ema20 = (ema5_p <= ema20_p) and (ema5_c > ema20_c)
+            ema10_cross_ema20 = (ema10_p <= ema20_p) and (ema10_c > ema20_c)
 
-                if ema5_cross_ema20:
-                    cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"5 EMA crossed above 20 EMA on {cross_date}")
+            if ema5_cross_ema20:
+                cross_date = data.index[-1].strftime("%Y-%m-%d")
+                found_signals.append(f"5 EMA crossed above 20 EMA on {cross_date}")
 
-                if ema10_cross_ema20:
-                    cross_date = data.index[i].strftime("%Y-%m-%d")
-                    found_signals.append(f"10 EMA crossed above 20 EMA on {cross_date}")
+            if ema10_cross_ema20:
+                cross_date = data.index[-1].strftime("%Y-%m-%d")
+                found_signals.append(f"10 EMA crossed above 20 EMA on {cross_date}")
 
             if found_signals:
                 any_signal_found = True
@@ -104,7 +159,7 @@ def run_screener(stocks):
                 print(msg)
                 send_telegram_message(msg)
             else:
-                print(f"{symbol}: no crossover in last {LOOKBACK_DAYS} days")
+                print(f"{symbol}: no crossover today")
 
         except Exception as e:
             print(f"{symbol}: error - {e}")
