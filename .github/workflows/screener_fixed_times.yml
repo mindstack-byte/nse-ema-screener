@@ -2,12 +2,11 @@ name: NSE EMA Screener
 
 on:
   schedule:
-    # 9:27 AM IST = 3:57 AM UTC, Mon-Fri
-    - cron: '57 3 * * 1-5'
-    # 12:30 PM IST = 7:00 AM UTC, Mon-Fri
-    - cron: '0 7 * * 1-5'
-    # 3:10 PM IST = 9:40 AM UTC, Mon-Fri
-    - cron: '40 9 * * 1-5'
+    # 9:35 AM IST = 4:05 AM UTC, Mon-Fri
+    - cron: '5 4 * * 1-5'
+
+    # 12:45 PM IST = 7:15 AM UTC, Mon-Fri
+    - cron: '15 7 * * 1-5'
   workflow_dispatch: {}
 
 jobs:
